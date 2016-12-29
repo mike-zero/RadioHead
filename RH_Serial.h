@@ -147,6 +147,9 @@ public:
     /// Arduino and other, it is an instance of the built in HardwareSerial class.
     RH_Serial(HardwareSerial& serial);
 
+    /// Constructor for RS485 with TX enable control
+    RH_Serial(HardwareSerial& serial, uint8_t tx_enable_pin, boolean tx_enable_inverted);
+
     /// Return the HardwareSerial port in use by this instance
     /// \return The current HardwareSerial as a reference
     HardwareSerial& serial();
@@ -249,6 +252,12 @@ protected:
 
     /// FCS for transmitted data
     uint16_t        _txFcs;
+
+    /// TX_enable pin (for RS485 flow direction control), default is 0xFF (disable)
+    uint8_t         _txEnablePin;
+
+    /// TX_enable pin mode; default is false (LOW for RX, HIGH for TX); when true, set TX_enable pin to LOW for TX
+    bool            _txEnablePinInverted;
 };
 
 /// @example serial_reliable_datagram_client.pde

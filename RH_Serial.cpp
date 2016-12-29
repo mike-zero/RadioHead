@@ -13,6 +13,17 @@
 RH_Serial::RH_Serial(HardwareSerial& serial)
     :
     _serial(serial),
+    _txEnablePin(0xFF),
+    _txEnablePinInverted(false),
+    _rxState(RxStateInitialising)
+{
+}
+
+RH_Serial::RH_Serial(HardwareSerial& serial, uint8_t tx_enable_pin, boolean tx_enable_inverted)
+    :
+    _serial(serial),
+    _txEnablePin(tx_enable_pin),
+    _txEnablePinInverted(tx_enable_inverted),
     _rxState(RxStateInitialising)
 {
 }
@@ -27,6 +38,10 @@ bool RH_Serial::init()
     if (!RHGenericDriver::init())
 	return false;
     _rxState = RxStateIdle;
+    if (_txEnablePin != 0xFF) {
+        pinMode(_txEnablePin, OUTPUT);
+        digitalWrite(_txEnablePin, _txEnablePinInverted ? HIGH : LOW);
+    }
     return true;
 }
 
@@ -203,6 +218,10 @@ bool RH_Serial::send(const uint8_t* data, uint8_t len)
     if (!waitCAD()) 
 	return false;  // Check channel activity
 
+    if (_txEnablePin != 0xFF) {
+        digitalWrite(_txEnablePin, _txEnablePinInverted ? LOW : HIGH);
+    }
+
     _txFcs = 0xffff;    // Initial value
     _serial.write(DLE); // Not in FCS
     _serial.write(STX); // Not in FCS
@@ -223,6 +242,11 @@ bool RH_Serial::send(const uint8_t* data, uint8_t len)
     // Now send the calculated FCS for this message
     _serial.write((_txFcs >> 8) & 0xff);
     _serial.write(_txFcs & 0xff);
+
+    if (_txEnablePin != 0xFF) {
+        _serial.flush();
+        digitalWrite(_txEnablePin, _txEnablePinInverted ? HIGH : LOW);
+    }
     return true;
 }
 
