@@ -1,7 +1,7 @@
 // RadioHead.h
 // Author: Mike McCauley (mikem@airspayce.com) DO NOT CONTACT THE AUTHOR DIRECTLY
 // Copyright (C) 2014 Mike McCauley
-// $Id: RadioHead.h,v 1.57 2016/08/17 01:53:21 mikem Exp mikem $
+// $Id: RadioHead.h,v 1.60 2017/02/01 21:46:02 mikem Exp mikem $
 
 /// \mainpage RadioHead Packet Radio library for embedded microprocessors
 ///
@@ -10,8 +10,8 @@
 /// via a variety of common data radios and other transports on a range of embedded microprocessors.
 ///
 /// The version of the package that this documentation refers to can be downloaded 
-/// from http://www.airspayce.com/mikem/arduino/RadioHead/RadioHead-1.64.zip
-/// You can find the latest version at http://www.airspayce.com/mikem/arduino/RadioHead
+/// from http://www.airspayce.com/mikem/arduino/RadioHead/RadioHead-1.71.zip
+/// You can find the latest version of the documentation at http://www.airspayce.com/mikem/arduino/RadioHead
 ///
 /// You can also find online help and discussion at 
 /// http://groups.google.com/group/radiohead-arduino
@@ -87,6 +87,8 @@
 ///
 /// - RH_NRF51
 /// Works with Nordic nRF51 compatible 2.4 GHz SoC/devices such as the nRF51822.
+/// Also works with Sparkfun nRF52832 breakout board, with Arduino 1.6.13 and
+/// Sparkfun nRF52 boards manager 0.2.3
 ///
 /// - RH_RF95
 /// Works with Semtech SX1276/77/78/79, Modtronix inAir4 and inAir9,
@@ -318,14 +320,13 @@
 /// the right to share who uses it. If you wish to use this software under Open
 /// Source Licensing, you must contribute all your source code to the open source
 /// community in accordance with the GPL Version 2 when your application is
-/// distributed. See http://www.gnu.org/copyleft/gpl.html
+/// distributed. See https://www.gnu.org/licenses/gpl-2.0.html
 /// 
 /// \par Commercial Licensing
 ///
 /// This is the appropriate option if you are creating proprietary applications
 /// and you are not prepared to distribute and share the source code of your
-/// application. Contact info@airspayce.com for details (do not use this address for anything other than 
-/// commercial license enquiries. For all other queries, using the RadioHead mailing list).
+/// application. Purchase commercial licenses at http://airspayce.binpress.com
 ///
 /// \par Revision History
 /// \version 1.1 2014-04-14<br>
@@ -673,12 +674,42 @@
 ///              Channel Activity Detection (CAD). Based on code contributed by Bent Guldbjerg Christensen.
 ///              Implmentations of isChannelActive() plus documentation for other radio modules wil be welcomed.
 /// \version 1.63 2016-10-20
-///              Testing with Adafruit Feather 32u4 with RFM69HCW. Updated documentation to reflect.
+///              Testing with Adafruit Feather 32u4 with RFM69HCW. Updated documentation to reflect.<br>
 /// \version 1.64 2016-12-10
-///              RHReliableDatagram now initialises _seenids. Fix from Ben Lim.
-///              In RH_NRF51, added get_temperature().
+///              RHReliableDatagram now initialises _seenids. Fix from Ben Lim.<br>
+///              In RH_NRF51, added get_temperature().<br>
 ///              In RH_NRF51, added support for AES packet encryption, which required a slight change 
-///              to the on-air message format.
+///              to the on-air message format.<br>
+/// \version 1.65 2017-01-11
+///              Fixed a race condition with RH_NRF51 that prevented ACKs being reliably received.<br>
+///              Removed code in RH_NRF51 that enabled the DC-DC converter. This seems not to be a necessary condition
+///              for the radio to work and is now left to the application if that is required.<br>
+///              Proven interoperation between nRF51822 and nRF52832.<br>
+///              Modification and testing of RH_NRF51 so it works with nRF52 family processors,
+///              such Sparkfun nRF52832 breakout board, with Arduino 1.6.13 and
+///              Sparkfun nRF52 boards manager 0.2.3 using the procedures outlined in
+///              https://learn.sparkfun.com/tutorials/nrf52832-breakout-board-hookup-guide<br>
+///              Caution, the Sparkfun development system for Arduino is still immature. We had to 
+///              rebuild the nrfutil program since the supplied one was not suitable for 
+///              the Linux host we were developing on. See https://forum.sparkfun.com/viewtopic.php?f=32&t=45071
+///              Also, after downloading a sketch in the nRF52832, the program does not start executing cleanly: 
+///              you have to reset the processor again by pressing the reset button. 
+///              This appears to be a problem with nrfutil, rather than a bug in RadioHead.
+/// \version 1.66 2017-01-15
+///              Fixed some errors in (unused) register definitions in RH_RF95.h.<br>
+///              Fixed a problem that caused compilation errors in RH_NRF51 if the appropriate board 
+///              support was not installed.
+/// \version 1.67 2017-01-24
+///              Added RH_RF95::frequencyError() to return the estimated centre frequency offset in Hz 
+///              of the last received message
+/// \version 1.68 2017-01-25
+///              Fixed arithmetic error in RH_RF95::frequencyError() for some platforms.
+/// \version 1.69 2017-02-02
+///              Added RH_RF95::lastSNR() and improved lastRssi() calculations per the manual.
+/// \version 1.70 2017-02-03
+///              Added link to Binpress commercial license purchasing.
+/// \version 1.71 2017-02-07
+///              Improved support for STM32. Patch from Bent Guldbjerg Christensen.
 ///
 /// \author  Mike McCauley. DO NOT CONTACT THE AUTHOR DIRECTLY. USE THE MAILING LIST GIVEN ABOVE
 
@@ -687,7 +718,7 @@
 
 // Official version numbers are maintained automatically by Makefile:
 #define RH_VERSION_MAJOR 1
-#define RH_VERSION_MINOR 64
+#define RH_VERSION_MINOR 71
 
 // Symbolic names for currently supported platform types
 #define RH_PLATFORM_ARDUINO          1
@@ -699,6 +730,7 @@
 #define RH_PLATFORM_STM32STD         7
 #define RH_PLATFORM_STM32F4_HAL      8 
 #define RH_PLATFORM_RASPI            9
+// Also nRF52 family:
 #define RH_PLATFORM_NRF51            10
 #define RH_PLATFORM_ESP8266          11
 #define RH_PLATFORM_STM32F2          12
@@ -713,7 +745,7 @@
  #elif defined(MPIDE)
   // Uno32 under old MPIDE, which has been discontinued:
   #define RH_PLATFORM RH_PLATFORM_UNO32
- #elif defined(NRF51)
+#elif defined(NRF51) || defined(NRF52)
   #define RH_PLATFORM RH_PLATFORM_NRF51
  #elif defined(ESP8266)
   #define RH_PLATFORM RH_PLATFORM_ESP8266
@@ -779,10 +811,10 @@
  #define RH_HAVE_SERIAL
 
 #elif (RH_PLATFORM == RH_PLATFORM_STM32) // Maple, Flymaple etc
- #include <wirish.h>	
+ #include <STM32ArduinoCompat/wirish.h>	
  #include <stdint.h>
  #include <string.h>
- #include <HardwareSPI.h>
+ #include <STM32ArduinoCompat/HardwareSPI.h>
  #define RH_HAVE_HARDWARE_SPI
  // Defines which timer to use on Maple
  #define MAPLE_TIMER 1
